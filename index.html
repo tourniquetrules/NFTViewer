@@ -51,7 +51,7 @@
                 
                 document.getElementById("nft-name").innerText = metadata.name;
                 document.getElementById("nft-description").innerText = metadata.description;
-                document.getElementById("nft-image").src = metadata.image.replace("ipfs://", "https://gateway.pinata.cloud/ipfs/");
+                document.getElementById("nft-image").src = metadata.image.replace("ipfs://", "https:/red-secret-guanaco-45.mypinata.cloud/ipfs/");
                 
                 // Fetch Owner Address
                 const owner = await contract.ownerOf(tokenId);
