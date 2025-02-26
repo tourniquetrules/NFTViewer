@@ -3,121 +3,310 @@
 <head>
     <title>Liberty NFT Viewer</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
-    <h1>Liberty NFT Viewer 5.0</h1>
+    <h1>SLHS NFT Viewer 2</h1>
+    
     <label for="walletAddress">Enter Wallet Address:</label>
     <input type="text" id="walletAddress" placeholder="0xYourWalletAddress" />
-    <button onclick="fetchContractsAndNFTs()">Find My NFTs</button>
-    <button onclick="generateQRCode()">Generate QR Code</button>
-<div id="qrcode"></div>
-
-    <div id="nft-list"></div>
-    <script>
-    function generateQRCode() {
-        const wallet = document.getElementById("walletAddress").value.trim();
-        const tokenId = document.getElementById("tokenId").value.trim();
-
-        if (!ethers.utils.isAddress(wallet) || !tokenId) {
-            alert("Enter a valid wallet address and Token ID first.");
-            return;
-        }
-
-        const url = `https://tourniquetrules.github.io/AutoNFTLookup.html?wallet=${wallet}&tokenId=${tokenId}`;
-        document.getElementById("qrcode").innerHTML = "";
-        new QRCode(document.getElementById("qrcode"), url);
-    }
-</script>
+    
+    <label for="tokenId">Enter Token ID:</label>
+    <input type="number" id="tokenId" placeholder="1" />
+    
+    <button onclick="fetchNFT()">Find My NFT</button>
+    
+    <div id="nft-display"></div>
 
     <script>
         const provider = new ethers.providers.JsonRpcProvider("https://rpc.libertyproject.space/");
-        const knownContracts = [
-            "0x691ea6B18cbaffB0341908b55A1431C06702F1EB", // Example contract
-            "0x32124F3f053aE4Ed7BE2132b08FcCd04356D19A4",  // Another example
-            "0x3D64457252578F73ce75A5c2375472e2C2d1da6B"
-        ];
+        const contractAddress = "0x3D64457252578F73ce75A5c2375472e2C2d1da6B"; // Replace with the new contract address
+        
+        // ABI extracted from SLHSBrassCoinNFT.json
         const contractABI = [
+    {
+        "inputs": [],
+        "stateMutability": "nonpayable",
+        "type": "constructor"
+    },
+    {
+        "inputs": [
             {
-                "inputs": [{ "internalType": "address", "name": "owner", "type": "address" }],
-                "name": "balanceOf",
-                "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
-                "stateMutability": "view",
-                "type": "function"
+                "internalType": "address",
+                "name": "to",
+                "type": "address"
             },
             {
-                "inputs": [{ "internalType": "uint256", "name": "tokenId", "type": "uint256" }],
-                "name": "ownerOf",
-                "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [{ "internalType": "uint256", "name": "tokenId", "type": "uint256" }],
-                "name": "tokenURI",
-                "outputs": [{ "internalType": "string", "name": "", "type": "string" }],
-                "stateMutability": "view",
-                "type": "function"
+                "internalType": "uint256",
+                "name": "tokenId",
+                "type": "uint256"
             }
-        ];
+        ],
+        "name": "approve",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "owner",
+                "type": "address"
+            }
+        ],
+        "name": "balanceOf",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "tokenId",
+                "type": "uint256"
+            }
+        ],
+        "name": "burn",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "tokenId",
+                "type": "uint256"
+            }
+        ],
+        "name": "getApproved",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "owner",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "operator",
+                "type": "address"
+            }
+        ],
+        "name": "isApprovedForAll",
+        "outputs": [
+            {
+                "internalType": "bool",
+                "name": "",
+                "type": "bool"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "recipient",
+                "type": "address"
+            },
+            {
+                "internalType": "string",
+                "name": "metadataURI",
+                "type": "string"
+            }
+        ],
+        "name": "mintNFT",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "name",
+        "outputs": [
+            {
+                "internalType": "string",
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "owner",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "tokenId",
+                "type": "uint256"
+            }
+        ],
+        "name": "ownerOf",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "symbol",
+        "outputs": [
+            {
+                "internalType": "string",
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "tokenId",
+                "type": "uint256"
+            }
+        ],
+        "name": "tokenURI",
+        "outputs": [
+            {
+                "internalType": "string",
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "from",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "to",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "tokenId",
+                "type": "uint256"
+            }
+        ],
+        "name": "transferFrom",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    }
+]
+;
 
-        async function fetchContractsAndNFTs() {
-            const walletAddress = document.getElementById("walletAddress").value.trim();
-            if (!ethers.utils.isAddress(walletAddress)) {
+        function getURLParams() {
+            const params = new URLSearchParams(window.location.search);
+            return {
+                wallet: params.get("wallet"),
+                tokenId: params.get("tokenId")
+            };
+        }
+
+        async function fetchNFT() {
+            const wallet = document.getElementById("walletAddress").value.trim();
+            const tokenId = document.getElementById("tokenId").value.trim();
+
+            if (!ethers.utils.isAddress(wallet)) {
                 alert("Invalid wallet address!");
                 return;
             }
-            
-            document.getElementById("nft-list").innerHTML = "<p>Searching for contracts...</p>";
-            let nftListHTML = "";
-            let foundContracts = [];
 
-            // Step 1: Identify Contracts Associated with the Address
-            for (const contractAddress of knownContracts) {
-                const contract = new ethers.Contract(contractAddress, contractABI, provider);
-                try {
-                    const balance = await contract.balanceOf(walletAddress);
-                    if (balance > 0) {
-                        foundContracts.push(contractAddress);
-                    }
-                } catch (error) {
-                    console.log(`Error checking contract ${contractAddress}:`, error);
+            const contract = new ethers.Contract(contractAddress, contractABI, provider);
+
+            try {
+                const owner = await contract.ownerOf(tokenId);
+                if (owner.toLowerCase() !== wallet.toLowerCase()) {
+                    alert("This wallet does not own the specified Token ID.");
+                    return;
                 }
-            }
-            
-            if (foundContracts.length === 0) {
-                document.getElementById("nft-list").innerHTML = "<p>No NFT contracts found for this address.</p>";
-                return;
-            }
 
-            document.getElementById("nft-list").innerHTML = "<p>Fetching NFTs...</p>";
-            
-            // Step 2: Retrieve NFTs for Each Contract
-            for (const contractAddress of foundContracts) {
-                const contract = new ethers.Contract(contractAddress, contractABI, provider);
-                for (let tokenId = 1; tokenId <= 100; tokenId++) { // Searches Token IDs from 1-100
-                    try {
-                        const owner = await contract.ownerOf(tokenId);
-                        if (owner.toLowerCase() === walletAddress.toLowerCase()) {
-                            const tokenURI = await contract.tokenURI(tokenId);
-                            const metadataUrl = tokenURI.replace("ipfs://", "https://red-secret-guanaco-45.mypinata.cloud/ipfs/");
-                            const metadata = await fetch(metadataUrl).then(res => res.json());
+                const tokenURI = await contract.tokenURI(tokenId);
+                const metadataUrl = tokenURI.replace("ipfs://", "https://red-secret-guanaco-45.mypinata.cloud/ipfs/");
+                const metadata = await fetch(metadataUrl).then(res => res.json());
 
-                            nftListHTML += `<div>
-                                <h3>${metadata.name} (Token ID: ${tokenId})</h3>
-                                <p>Contract Address: ${contractAddress}</p>
-                                <p>${metadata.description}</p>
-                                <img src="${metadata.image.replace("ipfs://", "https://red-secret-guanaco-45.mypinata.cloud/ipfs/")}" width="200px" />
-                            </div>`;
-                        }
-                    } catch (error) {
-                        console.log(`Token ID ${tokenId} does not exist in contract ${contractAddress} or error fetching.`);
-                    }
+                let imagesHTML = "";
+                if (Array.isArray(metadata.images)) {
+                    metadata.images.forEach(image => {
+                        imagesHTML += `<img src="${image.replace("ipfs://", "https://red-secret-guanaco-45.mypinata.cloud/ipfs/")}" width="200px" />`;
+                    });
+                } else {
+                    imagesHTML = `<img src="${metadata.image.replace("ipfs://", "https://red-secret-guanaco-45.mypinata.cloud/ipfs/")}" width="200px" />`;
                 }
+
+                document.getElementById("nft-display").innerHTML = `
+                    <h3>${metadata.name} (Token ID: ${tokenId})</h3>
+                    <p>${metadata.description}</p>
+                    ${imagesHTML}
+                    <p>Owned by: ${owner}</p>
+                `;
+            } catch (error) {
+                alert("Error fetching NFT details. Please check the Token ID.");
+                console.log(error);
             }
-            
-            document.getElementById("nft-list").innerHTML = nftListHTML || "<p>No NFTs found for this address.</p>";
         }
+
+        window.onload = () => {
+            const params = getURLParams();
+            if (params.wallet && params.tokenId) {
+                document.getElementById("walletAddress").value = params.wallet;
+                document.getElementById("tokenId").value = params.tokenId;
+                fetchNFT();
+            }
+        };
     </script>
 </body>
 </html>
