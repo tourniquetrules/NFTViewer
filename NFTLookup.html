@@ -14,7 +14,9 @@
     
     <script>
         const provider = new ethers.providers.JsonRpcProvider("https://rpc.libertyproject.space/");
-        const contractAddress = "0x691ea6B18cbaffB0341908b55A1431C06702F1EB"; // Replace with actual deployed contract
+        const contractAddresses = [
+            "0x691ea6B18cbaffB0341908b55A1431C06702F1EB", // Add more contract addresses if needed
+        ];
         const contractABI = [
             {
                 "inputs": [{ "internalType": "address", "name": "owner", "type": "address" }],
@@ -46,26 +48,29 @@
                 return;
             }
             
-            const contract = new ethers.Contract(contractAddress, contractABI, provider);
             document.getElementById("nft-list").innerHTML = "<p>Searching for NFTs...</p>";
             let nftListHTML = "";
             
-            for (let tokenId = 1; tokenId <= 100; tokenId++) { // Searches Token IDs from 1-100
-                try {
-                    const owner = await contract.ownerOf(tokenId);
-                    if (owner.toLowerCase() === walletAddress.toLowerCase()) {
-                        const tokenURI = await contract.tokenURI(tokenId);
-                        const metadataUrl = tokenURI.replace("ipfs://", "https://red-secret-guanaco-45.mypinata.cloud/ipfs/");
-                        const metadata = await fetch(metadataUrl).then(res => res.json());
+            for (const contractAddress of contractAddresses) {
+                const contract = new ethers.Contract(contractAddress, contractABI, provider);
+                for (let tokenId = 1; tokenId <= 100; tokenId++) { // Searches Token IDs from 1-100
+                    try {
+                        const owner = await contract.ownerOf(tokenId);
+                        if (owner.toLowerCase() === walletAddress.toLowerCase()) {
+                            const tokenURI = await contract.tokenURI(tokenId);
+                            const metadataUrl = tokenURI.replace("ipfs://", "https://red-secret-guanaco-45.mypinata.cloud/ipfs/");
+                            const metadata = await fetch(metadataUrl).then(res => res.json());
 
-                        nftListHTML += `<div>
-                            <h3>${metadata.name} (Token ID: ${tokenId})</h3>
-                            <p>${metadata.description}</p>
-                            <img src="${metadata.image.replace("ipfs://", "https://red-secret-guanaco-45.mypinata.cloud/ipfs/")}" width="200px" />
-                        </div>`;
+                            nftListHTML += `<div>
+                                <h3>${metadata.name} (Token ID: ${tokenId})</h3>
+                                <p>Contract Address: ${contractAddress}</p>
+                                <p>${metadata.description}</p>
+                                <img src="${metadata.image.replace("ipfs://", "https://red-secret-guanaco-45.mypinata.cloud/ipfs/")}" width="200px" />
+                            </div>`;
+                        }
+                    } catch (error) {
+                        console.log(`Token ID ${tokenId} does not exist in contract ${contractAddress} or error fetching.`);
                     }
-                } catch (error) {
-                    console.log(`Token ID ${tokenId} does not exist or error fetching.`);
                 }
             }
             
