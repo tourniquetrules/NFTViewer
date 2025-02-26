@@ -5,7 +5,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
 </head>
 <body>
-    <h1>Liberty NFT Viewer</h1>
+    <h1>Liberty NFT Viewer 2.0</h1>
     
     <label for="walletAddress">Enter Wallet Address:</label>
     <input type="text" id="walletAddress" placeholder="0xYourWalletAddress" />
@@ -67,10 +67,19 @@
                 const metadataUrl = tokenURI.replace("ipfs://", "https://red-secret-guanaco-45.mypinata.cloud/ipfs/");
                 const metadata = await fetch(metadataUrl).then(res => res.json());
 
+                let imagesHTML = "";
+                if (Array.isArray(metadata.images)) {
+                    metadata.images.forEach(image => {
+                        imagesHTML += `<img src="${image.replace("ipfs://", "https://red-secret-guanaco-45.mypinata.cloud/ipfs/")}" width="200px" />`;
+                    });
+                } else {
+                    imagesHTML = `<img src="${metadata.image.replace("ipfs://", "https://red-secret-guanaco-45.mypinata.cloud/ipfs/")}" width="200px" />`;
+                }
+
                 document.getElementById("nft-display").innerHTML = `
                     <h3>${metadata.name} (Token ID: ${tokenId})</h3>
                     <p>${metadata.description}</p>
-                    <img src="${metadata.image.replace("ipfs://", "https://red-secret-guanaco-45.mypinata.cloud/ipfs/")}" width="200px" />
+                    ${imagesHTML}
                     <p>Owned by: ${owner}</p>
                 `;
             } catch (error) {
