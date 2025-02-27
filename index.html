@@ -5,9 +5,104 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
 </head>
 <body>
-    <h1>Liberty NFT Viewer 3.0</h1>
+    <h1>Liberty NFT Viewer 4.0</h1>
+    
+    <label for="contractAddress">Enter Contract Address:</label><!DOCTYPE html>
+<html>
+<head>
+    <title>Liberty NFT Viewer</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+</head>
+<body>
+    <h1>Liberty NFT Viewer</h1>
     
     <label for="contractAddress">Enter Contract Address:</label>
+    <input type="text" id="contractAddress" placeholder="0xYourContractAddress" />
+    
+    <label for="tokenId">Enter Token ID:</label>
+    <input type="number" id="tokenId" placeholder="1" />
+    
+    <button onclick="fetchOwnerOfNFT()">Find NFT Owner</button>
+    
+    <div id="nft-display"></div>
+
+    <script>
+        const provider = new ethers.providers.JsonRpcProvider("https://rpc.libertyproject.space/");
+        
+        function getURLParams() {
+            const params = new URLSearchParams(window.location.search);
+            return {
+                contract: params.get("contract"),
+                tokenId: params.get("tokenID") // Fixed tokenID case sensitivity issue
+            };
+        }
+
+        async function fetchOwnerOfNFT() {
+            const contractAddress = document.getElementById("contractAddress").value.trim();
+            const tokenId = document.getElementById("tokenId").value.trim();
+
+            if (!ethers.utils.isAddress(contractAddress)) {
+                alert("Invalid contract address!");
+                return;
+            }
+
+            const contractABI = [
+                {
+                    "inputs": [{ "internalType": "uint256", "name": "tokenId", "type": "uint256" }],
+                    "name": "ownerOf",
+                    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+                    "stateMutability": "view",
+                    "type": "function"
+                },
+                {
+                    "inputs": [{ "internalType": "uint256", "name": "tokenId", "type": "uint256" }],
+                    "name": "tokenURI",
+                    "outputs": [{ "internalType": "string", "name": "", "type": "string" }],
+                    "stateMutability": "view",
+                    "type": "function"
+                }
+            ];
+
+            const contract = new ethers.Contract(contractAddress, contractABI, provider);
+
+            try {
+                const owner = await contract.ownerOf(tokenId);
+                const tokenURI = await contract.tokenURI(tokenId);
+                const metadataUrl = tokenURI.replace("ipfs://", "https://red-secret-guanaco-45.mypinata.cloud/ipfs/");
+                const metadata = await fetch(metadataUrl).then(res => res.json());
+                
+                let imageHTML = "";
+                if (Array.isArray(metadata.images)) {
+                    metadata.images.forEach(image => {
+                        imageHTML += `<img src="${image.replace("ipfs://", "https://red-secret-guanaco-45.mypinata.cloud/ipfs/")}" width="200px" />`;
+                    });
+                } else {
+                    imageHTML = `<img src="${metadata.image.replace("ipfs://", "https://red-secret-guanaco-45.mypinata.cloud/ipfs/")}" width="200px" />`;
+                }
+
+                document.getElementById("nft-display").innerHTML = `
+                    <h3>Token ID: ${tokenId}</h3>
+                    <p>Owned by: ${owner}</p>
+                    ${imageHTML}
+                `;
+            } catch (error) {
+                alert("Error fetching NFT owner or image. Please check the Contract Address and Token ID.");
+                console.log(error);
+            }
+        }
+
+        window.onload = () => {
+            const params = getURLParams();
+            if (params.contract && params.tokenId) {
+                document.getElementById("contractAddress").value = params.contract;
+                document.getElementById("tokenId").value = params.tokenId;
+                fetchOwnerOfNFT();
+            }
+        };
+    </script>
+</body>
+</html>
+
     <input type="text" id="contractAddress" placeholder="0xYourContractAddress" />
     
     <label for="tokenId">Enter Token ID:</label>
