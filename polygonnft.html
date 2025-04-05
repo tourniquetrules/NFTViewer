@@ -53,7 +53,9 @@
       const contract = new ethers.Contract(CONTRACT_ADDRESS, abi, PROVIDER);
 
       const tokenURI = await contract.tokenURI(TOKEN_ID);
-      const ipfsURL = tokenURI.replace("ipfs://", "https://ipfs.io/ipfs/");
+      const ipfsURL = tokenURI.replace("ipfs://", "https://cloudflare-ipfs.com/ipfs/");
+      document.getElementById("nft-image").src = metadata.image.replace("ipfs://", "https://cloudflare-ipfs.com/ipfs/");
+
       const response = await fetch(ipfsURL);
       const metadata = await response.json();
 
