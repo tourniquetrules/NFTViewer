@@ -1,19 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Challenge Coin #0</title>
+  <meta charset="UTF-8">
+  <title>Challenge Coin NFT</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      padding: 2em;
-      background: #f5f5f5;
+      font-family: sans-serif;
       text-align: center;
+      padding: 2em;
     }
     img {
       max-width: 300px;
-      margin-bottom: 1em;
       border-radius: 16px;
       box-shadow: 0 0 10px rgba(0,0,0,0.2);
     }
@@ -22,74 +19,47 @@
     }
     .traits span {
       display: inline-block;
-      background: #fff;
-      border-radius: 8px;
+      background: #eee;
       padding: 0.5em 1em;
       margin: 0.2em;
-      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+      border-radius: 8px;
     }
   </style>
 </head>
 <body>
   <h1 id="nft-name">Loading NFT...</h1>
-  <img id="nft-image" src="" alt="NFT image" style="display:none;" />
+  <img id="nft-image" src="" style="display:none;" />
   <p id="nft-desc"></p>
   <div class="traits" id="nft-traits"></div>
-  <h3>Current Owner:</h3>
-  <p id="nft-owner">Fetching...</p>
 
-  <!-- Load ethers.js using ES Module -->
-  <script type="module">
-    import { ethers } from 'https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.esm.min.js';
+  <script>
+    const metadataCID = "bafkreicsa2nzq4b2pmhgt5eclt3ocagrjjzpqokfmwuk3kyzomnhfggu7a";
+    const metadataURL = `https://gateway.pinata.cloud/ipfs/${metadataCID}`;
 
-    const CONTRACT_ADDRESS = "0xFAE4cb202aA4fF0078104DCAfFA86c008B4075C4";
-    const TOKEN_ID = 1;
-    const PROVIDER = new ethers.providers.JsonRpcProvider("https://polygon-rpc.com");
-
-    const abi = [
-      "function tokenURI(uint256 tokenId) public view returns (string memory)",
-      "function ownerOf(uint256 tokenId) public view returns (address)"
-    ];
-
-    async function loadNFT() {
-      try {
-        const contract = new ethers.Contract(CONTRACT_ADDRESS, abi, PROVIDER);
-        window.contract = contract; // optional: exposes to browser console
-
-        const tokenURI = await contract.tokenURI(TOKEN_ID);
-        const ipfsURL = tokenURI.replace("ipfs://", "https://gateway.thirdweb.dev/ipfs/");
-        const response = await fetch(ipfsURL);
-        const metadata = await response.json();
-
+    fetch(metadataURL)
+      .then(res => res.json())
+      .then(metadata => {
         document.getElementById("nft-name").innerText = metadata.name || "Unnamed NFT";
         document.getElementById("nft-desc").innerText = metadata.description || "";
 
-        const imageURL = metadata.image?.replace("ipfs://", "https://gateway.thirdweb.dev/ipfs/");
-        if (imageURL) {
+        const image = metadata.image?.replace("ipfs://", "https://gateway.pinata.cloud/ipfs/");
+        if (image) {
           const img = document.getElementById("nft-image");
-          img.src = imageURL;
+          img.src = image;
           img.style.display = "block";
         }
 
-        const traitsContainer = document.getElementById("nft-traits");
-        if (metadata.attributes) {
-          metadata.attributes.forEach(attr => {
-            const el = document.createElement("span");
-            el.innerText = `${attr.trait_type}: ${attr.value}`;
-            traitsContainer.appendChild(el);
-          });
-        }
-
-        const owner = await contract.ownerOf(TOKEN_ID);
-        document.getElementById("nft-owner").innerText = owner;
-      } catch (error) {
-        document.getElementById("nft-name").innerText = "Failed to load NFT";
-        document.getElementById("nft-desc").innerText = error.message;
-        console.error(error);
-      }
-    }
-
-    loadNFT();
+        const traits = document.getElementById("nft-traits");
+        (metadata.attributes || []).forEach(attr => {
+          const el = document.createElement("span");
+          el.innerText = `${attr.trait_type}: ${attr.value}`;
+          traits.appendChild(el);
+        });
+      })
+      .catch(err => {
+        document.getElementById("nft-name").innerText = "Failed to load metadata";
+        console.error(err);
+      });
   </script>
 </body>
 </html>
