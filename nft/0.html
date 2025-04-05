@@ -38,7 +38,7 @@
   <h3>Current Owner:</h3>
   <p id="nft-owner">Fetching...</p>
 
-  <!-- Load ethers.js as a module -->
+  <!-- Load ethers.js using ES Module -->
   <script type="module">
     import { ethers } from 'https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.esm.min.js';
 
@@ -54,17 +54,17 @@
     async function loadNFT() {
       try {
         const contract = new ethers.Contract(CONTRACT_ADDRESS, abi, PROVIDER);
-        window.contract = contract; // optional: expose to console
+        window.contract = contract; // optional: exposes to browser console
 
         const tokenURI = await contract.tokenURI(TOKEN_ID);
-        const ipfsURL = tokenURI.replace("ipfs://", "https://cloudflare-ipfs.com/ipfs/");
+        const ipfsURL = tokenURI.replace("ipfs://", "https://gateway.thirdweb.dev/ipfs/");
         const response = await fetch(ipfsURL);
         const metadata = await response.json();
 
         document.getElementById("nft-name").innerText = metadata.name || "Unnamed NFT";
         document.getElementById("nft-desc").innerText = metadata.description || "";
 
-        const imageURL = metadata.image?.replace("ipfs://", "https://cloudflare-ipfs.com/ipfs/");
+        const imageURL = metadata.image?.replace("ipfs://", "https://gateway.thirdweb.dev/ipfs/");
         if (imageURL) {
           const img = document.getElementById("nft-image");
           img.src = imageURL;
