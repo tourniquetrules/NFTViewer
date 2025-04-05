@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Challenge Coin #0</title>
-  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -39,21 +38,23 @@
   <h3>Current Owner:</h3>
   <p id="nft-owner">Fetching...</p>
 
-  <!-- Now that ethers.js is loaded above, this script will run without error -->
-  <script>
+  <!-- Load ethers.js as a module -->
+  <script type="module">
+    import { ethers } from 'https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.esm.min.js';
+
+    const CONTRACT_ADDRESS = "0xFAE4cb202aA4fF0078104DCAfFA86c008B4075C4";
+    const TOKEN_ID = 0;
+    const PROVIDER = new ethers.providers.JsonRpcProvider("https://polygon-rpc.com");
+
+    const abi = [
+      "function tokenURI(uint256 tokenId) public view returns (string memory)",
+      "function ownerOf(uint256 tokenId) public view returns (address)"
+    ];
+
     async function loadNFT() {
-      const CONTRACT_ADDRESS = "0xFAE4cb202aA4fF0078104DCAfFA86c008B4075C4";
-      const TOKEN_ID = 0;
-      const PROVIDER = new ethers.providers.JsonRpcProvider("https://polygon-rpc.com");
-
-      const abi = [
-        "function tokenURI(uint256 tokenId) public view returns (string memory)",
-        "function ownerOf(uint256 tokenId) public view returns (address)"
-      ];
-
       try {
         const contract = new ethers.Contract(CONTRACT_ADDRESS, abi, PROVIDER);
-        window.contract = contract;
+        window.contract = contract; // optional: expose to console
 
         const tokenURI = await contract.tokenURI(TOKEN_ID);
         const ipfsURL = tokenURI.replace("ipfs://", "https://cloudflare-ipfs.com/ipfs/");
@@ -88,7 +89,6 @@
       }
     }
 
-    // Call the function after everything is loaded
     loadNFT();
   </script>
 </body>
