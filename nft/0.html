@@ -33,7 +33,7 @@
 </head>
 <body>
   <h1 id="nft-name">Loading NFT...</h1>
-  <img id="nft-image" src="" alt="NFT image" />
+  <img id="nft-image" src="" alt="NFT image" style="display:none;" />
   <p id="nft-desc"></p>
   <div class="traits" id="nft-traits"></div>
   <h3>Current Owner:</h3>
@@ -51,15 +51,22 @@
 
     async function loadNFT() {
       const contract = new ethers.Contract(CONTRACT_ADDRESS, abi, PROVIDER);
+      window.contract = contract; // makes contract accessible in console
 
       const tokenURI = await contract.tokenURI(TOKEN_ID);
       const ipfsURL = tokenURI.replace("ipfs://", "https://cloudflare-ipfs.com/ipfs/");
       const response = await fetch(ipfsURL);
       const metadata = await response.json();
 
-      document.getElementById("nft-name").innerText = metadata.name;
-      document.getElementById("nft-desc").innerText = metadata.description;
-      document.getElementById("nft-image").src = metadata.image.replace("ipfs://", "https://cloudflare-ipfs.com/ipfs/");
+      document.getElementById("nft-name").innerText = metadata.name || "Unnamed NFT";
+      document.getElementById("nft-desc").innerText = metadata.description || "";
+
+      const imageURL = metadata.image?.replace("ipfs://", "https://cloudflare-ipfs.com/ipfs/");
+      if (imageURL) {
+        const img = document.getElementById("nft-image");
+        img.src = imageURL;
+        img.style.display = "block";
+      }
 
       const traitsContainer = document.getElementById("nft-traits");
       if (metadata.attributes) {
@@ -77,6 +84,7 @@
     loadNFT().catch(error => {
       document.getElementById("nft-name").innerText = "Failed to load NFT";
       document.getElementById("nft-desc").innerText = error.message;
+      console.error(error);
     });
   </script>
 </body>
