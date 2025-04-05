@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Challenge Coin #0</title>
-  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.min.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -39,53 +39,54 @@
   <h3>Current Owner:</h3>
   <p id="nft-owner">Fetching...</p>
 
+  <!-- Your script now runs after the page and ethers.js are fully loaded -->
   <script>
-    const CONTRACT_ADDRESS = "0xFAE4cb202aA4fF0078104DCAfFA86c008B4075C4";
-    const TOKEN_ID = 0;
-    const PROVIDER = new ethers.providers.JsonRpcProvider("https://polygon-rpc.com");
+    window.onload = async function () {
+      const CONTRACT_ADDRESS = "0xFAE4cb202aA4fF0078104DCAfFA86c008B4075C4";
+      const TOKEN_ID = 0;
+      const PROVIDER = new ethers.providers.JsonRpcProvider("https://polygon-rpc.com");
 
-    const abi = [
-      "function tokenURI(uint256 tokenId) public view returns (string memory)",
-      "function ownerOf(uint256 tokenId) public view returns (address)"
-    ];
+      const abi = [
+        "function tokenURI(uint256 tokenId) public view returns (string memory)",
+        "function ownerOf(uint256 tokenId) public view returns (address)"
+      ];
 
-    async function loadNFT() {
-      const contract = new ethers.Contract(CONTRACT_ADDRESS, abi, PROVIDER);
-      window.contract = contract; // makes contract accessible in console
+      try {
+        const contract = new ethers.Contract(CONTRACT_ADDRESS, abi, PROVIDER);
+        window.contract = contract;
 
-      const tokenURI = await contract.tokenURI(TOKEN_ID);
-      const ipfsURL = tokenURI.replace("ipfs://", "https://cloudflare-ipfs.com/ipfs/");
-      const response = await fetch(ipfsURL);
-      const metadata = await response.json();
+        const tokenURI = await contract.tokenURI(TOKEN_ID);
+        const ipfsURL = tokenURI.replace("ipfs://", "https://cloudflare-ipfs.com/ipfs/");
+        const response = await fetch(ipfsURL);
+        const metadata = await response.json();
 
-      document.getElementById("nft-name").innerText = metadata.name || "Unnamed NFT";
-      document.getElementById("nft-desc").innerText = metadata.description || "";
+        document.getElementById("nft-name").innerText = metadata.name || "Unnamed NFT";
+        document.getElementById("nft-desc").innerText = metadata.description || "";
 
-      const imageURL = metadata.image?.replace("ipfs://", "https://cloudflare-ipfs.com/ipfs/");
-      if (imageURL) {
-        const img = document.getElementById("nft-image");
-        img.src = imageURL;
-        img.style.display = "block";
+        const imageURL = metadata.image?.replace("ipfs://", "https://cloudflare-ipfs.com/ipfs/");
+        if (imageURL) {
+          const img = document.getElementById("nft-image");
+          img.src = imageURL;
+          img.style.display = "block";
+        }
+
+        const traitsContainer = document.getElementById("nft-traits");
+        if (metadata.attributes) {
+          metadata.attributes.forEach(attr => {
+            const el = document.createElement("span");
+            el.innerText = `${attr.trait_type}: ${attr.value}`;
+            traitsContainer.appendChild(el);
+          });
+        }
+
+        const owner = await contract.ownerOf(TOKEN_ID);
+        document.getElementById("nft-owner").innerText = owner;
+      } catch (error) {
+        document.getElementById("nft-name").innerText = "Failed to load NFT";
+        document.getElementById("nft-desc").innerText = error.message;
+        console.error(error);
       }
-
-      const traitsContainer = document.getElementById("nft-traits");
-      if (metadata.attributes) {
-        metadata.attributes.forEach(attr => {
-          const el = document.createElement("span");
-          el.innerText = `${attr.trait_type}: ${attr.value}`;
-          traitsContainer.appendChild(el);
-        });
-      }
-
-      const owner = await contract.ownerOf(TOKEN_ID);
-      document.getElementById("nft-owner").innerText = owner;
-    }
-
-    loadNFT().catch(error => {
-      document.getElementById("nft-name").innerText = "Failed to load NFT";
-      document.getElementById("nft-desc").innerText = error.message;
-      console.error(error);
-    });
+    };
   </script>
 </body>
 </html>
